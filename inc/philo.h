@@ -10,18 +10,19 @@
 
 typedef struct s_args
 {
-	unsigned int	nphilo;
-	unsigned int	ttd;
-	unsigned int	tte;
-	unsigned int	tts;
-	unsigned int	max_eat;
+	const unsigned int	nphilo;
+	const unsigned int	ttd;
+	const unsigned int	tte;
+	const unsigned int	tts;
+	const unsigned int	max_eat;
 }	t_args;
 
 typedef struct s_philo
 {
-	pthread_t		thread;
-	unsigned int	id;
-	pthread_mutex_t	forks[2];
+	pthread_t				thread;
+	const unsigned int		id;
+	pthread_mutex_t *const	r_fork;
+	pthread_mutex_t *const	l_fork;
 }	t_philo;
 
 typedef struct s_data
