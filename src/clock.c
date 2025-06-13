@@ -10,14 +10,22 @@ long	get_elapsed_time(struct timeval t0)
 	return (dt);
 }
 
-void	wait_x_ms(long x, struct timeval t0)
+long	get_time_ms(void)
+{
+	struct timeval	t;
+
+	gettimeofday(&t, NULL);
+	return ((t.tv_sec * 1000000 + t.tv_usec) / 1000);
+}
+
+void	wait_x_ms(long x)
 {
 	long	tf;
 	long	tx;
 
-	tf = get_elapsed_time(t0) + x;
+	tf = get_time_ms() + x;
 	do
-		tx = get_elapsed_time(t0);
+		tx = get_time_ms();
 	while (tx < tf);
 		
 }

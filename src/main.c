@@ -1,44 +1,36 @@
 #include "../inc/philo.h"
 
-// make philo helper function
+void	*routine(void *data);
+
+t_philo create_philo(unsigned int id, pthread_mutex_t *l_fork,
+					 pthread_mutex_t *r_fork, t_data *data)
+{
+	pthread_t	thread;
+
+	pthread_create(&thread, NULL, routine, &data->philos[id  - 1]);
+	return (t_philo){thread, id, r_fork, l_fork, data->args.tte};
+}
 // make arg helper function with const
 void	*routine(void *data)
 {
+	t_philo		philo;
 	pthread_t	tid;
-	t_data		*ndata;
-	int			i;
 
-	ndata = (t_data *)data;
 	tid = pthread_self();
-	i = 0;
-	while (tid != ndata->philos[i].thread)
-		i++;
-	ndata->philos[i].id = i + 1;
-	ndata->philos[i].r_fork = &ndata->forks[i];
-	if (!i)
-		ndata->philos[i].l_fork = &ndata->forks[ndata->args.nphilo - 1];
-	else
-		ndata->philos[i].l_fork = &ndata->forks[i - 1];
-	printf("philo %u %ld sits at table\n", ndata->philos[i].id, tid);
-	i = 0;
+	philo = *(t_philo *)data;
+	printf("philo %u selfid : %ld at table\n", philo.id, tid);
+	printf("philo %u struct : %ld at table\n", philo.id, philo.thread);
 }
 
 int main(int argc, char **argv)
 {
 	t_data	data;
-	long	dt;
 	int		i;
+	int		temp;
 
-	gettimeofday(&data.time_0, NULL);
 	if (parsing(argc, argv, &data.args))
 		return (1);
 	print_args(data.args);
-	// while(1)
-	// {
-	// 	wait_x_ms(data.args.tts, data.time_0);
-	// 	dt = get_elapsed_time(data.time_0);
-	// 	printf("t : %ld\n", dt);
-	// }
 	i = 0;
 	data.philos = malloc(sizeof(t_philo) * data.args.nphilo);
 	data.forks = malloc(sizeof(pthread_mutex_t) * data.args.nphilo);
@@ -51,7 +43,12 @@ int main(int argc, char **argv)
 	i = 0;
 	while (i < data.args.nphilo)
 	{
-		pthread_create(&data.philos[i].thread, NULL, routine, &data);
+		if (!i)
+			temp = data.args.nphilo - 1;
+		else
+			temp = i - 1;
+		data.philos[i] = create_philo(i + 1, &data.forks[temp], &data.forks[i], &data);
+		// pthread_create(&data.philos[i].thread, NULL, routine, &data)
 		// wait_x_ms(data.args.tts, data.time_0);
 		i++;
 	}
@@ -68,6 +65,12 @@ int main(int argc, char **argv)
 		printf("philo %u r_fork adress is %p\n", data.philos[i].id, data.philos[i].r_fork);
 		printf("philo %u l_fork adress is %p\n", data.philos[i].id, data.philos[i].l_fork);
 		i++;
+	}
+	data.t0 = get_time_ms();
+	while(1)
+	{
+		wait_x_ms(data.args.tts);
+		printf("t : %ld\n", get_time_ms() - data.t0);
 	}
 	free(data.philos);
 	free(data.forks);
