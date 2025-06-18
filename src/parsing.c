@@ -15,6 +15,8 @@ void print_args(t_args args)
 	printf("time to eat : %u\n", args.tte);
 	printf("time to sleep : %u\n", args.tte);
 	printf("number of times to eat : %u\n", args.max_eat);
+	printf("zero_t : %ld\n", args.zero_t);
+	printf("start_t : %ld\n", args.start_t);
 }
 
 static int all_num(char **argv)
@@ -51,6 +53,8 @@ int parsing(int argc, char **argv, t_args *args)
 	args->ttd = (unsigned int)atoi(*(argv++));
 	args->tte = (unsigned int)atoi(*(argv++));
 	args->tts = (unsigned int)atoi(*(argv++));
+	args->zero_t = get_time_ms();
+	args->start_t = args->zero_t + args->nphilo;
 	if (*argv)
 		args->max_eat = (unsigned int)(atoi(*argv));
 	else

@@ -1,76 +1,71 @@
 #include "../inc/philo.h"
 
-void	*routine(void *data);
+// handle needs to take log in parameter to stop sim
+// maybe return id of philos who are full
 
-t_philo create_philo(unsigned int id, pthread_mutex_t *l_fork,
-					 pthread_mutex_t *r_fork, t_data *data)
+int handle(t_event event)
 {
-	pthread_t	thread;
+	if (event.event != IS_FULL)
+		printf("%ld philo %u ", event.timestamp, event.philo_id);
+	if (event.event == THINKING)
+		printf("is thinking\n");
+	if (event.event == TOOK_FORK)
+		printf("has taken a fork\n");
+	if (event.event == EATING)
+		printf("is eating\n");
+	if (event.event == SLEEPING)
+		printf("is sleeping\n");
+	if (event.event == DYING)
+	{
+		printf("died\n");
+		return (0);
+	}
+	if (event.event == IS_FULL)
+		printf("%ld philo %u is full\n", event.timestamp, event.philo_id);
 
-	pthread_create(&thread, NULL, routine, &data->philos[id  - 1]);
-	return (t_philo){thread, id, r_fork, l_fork, data->args.tte};
+	return (1);
 }
-// make arg helper function with const
-void	*routine(void *data)
-{
-	t_philo		philo;
-	pthread_t	tid;
 
-	tid = pthread_self();
-	philo = *(t_philo *)data;
-	printf("philo %u selfid : %ld at table\n", philo.id, tid);
-	printf("philo %u struct : %ld at table\n", philo.id, philo.thread);
-}
+	// i = 0;
+	// while (i < data.args.nphilo)
+	// {
+	// 	printf("philo %u l_fork adress is %p\n", data.philos[i].id, data.philos[i].l_fork);
+	// 	printf("philo %u r_fork adress is %p\n", data.philos[i].id, data.philos[i].r_fork);
+	// 	i++;
+	// }
 
-int main(int argc, char **argv)
+int	main(int argc, char **argv)
 {
 	t_data	data;
 	int		i;
-	int		temp;
+	int		alive;
 
 	if (parsing(argc, argv, &data.args))
 		return (1);
 	print_args(data.args);
-	i = 0;
-	data.philos = malloc(sizeof(t_philo) * data.args.nphilo);
-	data.forks = malloc(sizeof(pthread_mutex_t) * data.args.nphilo);
-	while (i < data.args.nphilo)
+	if (setup(&data))
+		return (1);
+	alive = 1;
+	while (alive)
 	{
-		pthread_mutex_init(&data.forks[i], NULL);
-		printf("address of fork %d : %p\n", i + 1, &data.forks[i]);
-		i++;
+		while (data.log.head != data.log.tail)
+		{
+			pthread_mutex_lock(&data.log.queue_lock);
+			alive = handle(data.log.events[data.log.tail]);
+			// alive might not be need thx to log
+			// sim stop var in log if sim stop then philos die
+			// keep a number of philos who are full var in data if it equals
+			// nphilo then sim stops
+			data.log.tail = (data.log.tail + 1) % MAX_EVENTS;
+			pthread_mutex_unlock(&data.log.queue_lock);
+		}
 	}
 	i = 0;
 	while (i < data.args.nphilo)
 	{
-		if (!i)
-			temp = data.args.nphilo - 1;
-		else
-			temp = i - 1;
-		data.philos[i] = create_philo(i + 1, &data.forks[temp], &data.forks[i], &data);
-		// pthread_create(&data.philos[i].thread, NULL, routine, &data)
-		// wait_x_ms(data.args.tts, data.time_0);
-		i++;
-	}
-	i = 0;
-	while (i < data.args.nphilo)
-	{
+		printf("i = %d", i);
 		pthread_join(data.philos[i].thread, NULL);
 		i++;
-	}
-	i = 0;
-	while (i < data.args.nphilo)
-	{
-		pthread_mutex_init(&data.forks[i], NULL);
-		printf("philo %u r_fork adress is %p\n", data.philos[i].id, data.philos[i].r_fork);
-		printf("philo %u l_fork adress is %p\n", data.philos[i].id, data.philos[i].l_fork);
-		i++;
-	}
-	data.t0 = get_time_ms();
-	while(1)
-	{
-		wait_x_ms(data.args.tts);
-		printf("t : %ld\n", get_time_ms() - data.t0);
 	}
 	free(data.philos);
 	free(data.forks);
