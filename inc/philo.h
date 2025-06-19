@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                         ::::::::           */
+/*   philo.h                                             :+:    :+:           */
+/*                                                      +:+                   */
+/*   By: jodavis <marvin@42.fr>                        +#+                    */
+/*                                                    +#+                     */
+/*   Created: 2025/06/19 09:52:33 by jodavis        #+#    #+#                */
+/*   Updated: 2025/06/19 09:53:49 by jodavis        ########   odam.nl        */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef PHILO_H
 # define PHILO_H
 # include <stdio.h>
@@ -40,6 +52,7 @@ typedef struct s_event
 typedef struct s_log
 {
 	pthread_mutex_t	queue_lock;
+	int				stop;
 	int				head;
 	int				tail;
 	t_event			events[MAX_EVENTS];
@@ -65,12 +78,12 @@ typedef struct s_data
 
 //parsing.c
 
-int parsing(int argc, char **argv, t_args *args);
-void print_args(t_args args);
+int		parsing(int argc, char **argv, t_args *args);
+void	print_args(t_args args);
 
 //setup.c
 
-int setup(t_data *data);
+int		setup(t_data *data);
 
 //clock.c
 
@@ -78,6 +91,14 @@ void	wait_x_ms(long x);
 long	get_time_ms(void);
 
 //philo.c
+
 void	*routine(void *data);
+
+//philo.c
+
+int		sim_stop(t_log *log);
+void	message_log(t_philo *philo, int event);
+void	handle_events(t_log *log, int nphilo);
+int		print_states(t_event event);
 
 #endif

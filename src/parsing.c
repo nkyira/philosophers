@@ -1,14 +1,33 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                         ::::::::           */
+/*   parsing.c                                           :+:    :+:           */
+/*                                                      +:+                   */
+/*   By: jodavis <marvin@42.fr>                        +#+                    */
+/*                                                    +#+                     */
+/*   Created: 2025/06/19 10:09:17 by jodavis        #+#    #+#                */
+/*   Updated: 2025/06/19 10:13:34 by jodavis        ########   odam.nl        */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../inc/philo.h"
 
-static void print_parse_err(int type)
+static void	print_parse_err(int type)
 {
 	if (type == 1)
-		printf("usage: ./philo <num_of_philos> <time_to_die> <time_to_eat> <time_to_sleep> <(optional)number_of_times_each_philo_must_eat>\n");
+	{
+		printf("usage: ./philo <num_of_philos> <time_to_die> ");
+		printf("<time_to_eat> <time_to_sleep> ");
+		printf("<(optional)number_of_times_each_philo_must_eat>\n");
+	}
 	if (type == 2)
-		printf("enter values as unsigned integers ranging from 0 to 2147483647\n");
+	{
+		printf("enter values as unsigned integers ");
+		printf("ranging from 0 to 2147483647\n");
+	}
 }
 
-void print_args(t_args args)
+void	print_args(t_args args)
 {
 	printf("number of philos : %u\n", args.nphilo);
 	printf("time to die : %u\n", args.ttd);
@@ -19,11 +38,11 @@ void print_args(t_args args)
 	printf("start_t : %ld\n", args.start_t);
 }
 
-static int all_num(char **argv)
+static int	all_num(char **argv)
 {
-	int i;
+	int	i;
 
-	while(*argv)
+	while (*argv)
 	{
 		i = 0;
 		while ((*argv)[i])
@@ -37,14 +56,14 @@ static int all_num(char **argv)
 	return (1);
 }
 
-int parsing(int argc, char **argv, t_args *args)
+int	parsing(int argc, char **argv, t_args *args)
 {
-	if(argc != 5 && argc != 6)
+	if (argc != 5 && argc != 6)
 	{
 		print_parse_err(1);
 		return (1);
 	}
-	if(!all_num(++argv))
+	if (!all_num(++argv))
 	{
 		print_parse_err(2);
 		return (1);

@@ -1,16 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                         ::::::::           */
+/*   philo.c                                             :+:    :+:           */
+/*                                                      +:+                   */
+/*   By: jodavis <marvin@42.fr>                        +#+                    */
+/*                                                    +#+                     */
+/*   Created: 2025/06/19 10:14:03 by jodavis        #+#    #+#                */
+/*   Updated: 2025/06/19 10:16:32 by jodavis        ########   odam.nl        */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../inc/philo.h"
 
-void message_log(t_philo *philo, int event)
-{
-	pthread_mutex_lock(&philo->log->queue_lock);
-	philo->log->events[philo->log->head].philo_id = philo->id;
-	philo->log->events[philo->log->head].timestamp = get_time_ms() - philo->args.start_t;
-	philo->log->events[philo->log->head].event = event;
-	philo->log->head = (philo->log->head + 1) % MAX_EVENTS;
-	pthread_mutex_unlock(&philo->log->queue_lock);
-}
-
-int think_routine(t_philo *philo, long next_death)
+int	think_routine(t_philo *philo, long next_death)
 {
 	long	hungry;
 
@@ -18,13 +20,15 @@ int think_routine(t_philo *philo, long next_death)
 	message_log(philo, THINKING);
 	while (hungry - get_time_ms() > 0)
 	{
+		if (sim_stop(philo->log))
+			return (1);
 		if (next_death - get_time_ms() <= 0)
 			return (1);
 	}
 	return (0);
 }
 
-int eat_routine(t_philo *philo, long *next_death, int *times_eaten)
+int	eat_routine(t_philo *philo, long *next_death, int *times_eaten)
 {
 	long	finish_meal;
 
@@ -37,7 +41,7 @@ int eat_routine(t_philo *philo, long *next_death, int *times_eaten)
 	finish_meal = get_time_ms() + philo->args.tte;
 	while (finish_meal - get_time_ms() > 0)
 	{
-		if (next_death - get_time_ms() <= 0)
+		if (next_death - get_time_ms() <= 0 || sim_stop(philo->log))
 		{
 			pthread_mutex_unlock(philo->r_fork);
 			pthread_mutex_unlock(philo->l_fork);
@@ -52,7 +56,7 @@ int eat_routine(t_philo *philo, long *next_death, int *times_eaten)
 	return (0);
 }
 
-int sleep_routine(t_philo *philo, long next_death)
+int	sleep_routine(t_philo *philo, long next_death)
 {
 	long	wakeup;
 
@@ -60,6 +64,8 @@ int sleep_routine(t_philo *philo, long next_death)
 	wakeup = get_time_ms() + philo->args.tts;
 	while (wakeup - get_time_ms() > 0)
 	{
+		if (sim_stop(philo->log))
+			return (1);
 		if (next_death - get_time_ms() <= 0)
 			return (1);
 	}
@@ -69,28 +75,28 @@ int sleep_routine(t_philo *philo, long next_death)
 void	*routine(void *data)
 {
 	t_philo		*philo;
-	pthread_t	tid;
 	long		next_death;
 	int			times_eaten;
 
 	philo = (t_philo *)data;
 	next_death = philo->args.start_t + (long)philo->args.ttd;
 	wait_x_ms(philo->args.start_t - get_time_ms());
-	// printf("philo %u struct : %ld at table at time %ld\n", philo->id, philo->thread, get_time_ms() - philo->args.zero_t);
+	if (philo->r_fork == philo->l_fork)
+	{
+		wait_x_ms(next_death - get_time_ms());
+		message_log(philo, DYING);
+		return (NULL);
+	}
 	if (philo->id % 2)
 		wait_x_ms(1);
-	if (philo->id)
-	{
-	times_eaten = 0;
 	while (1)
 	{
 		if (eat_routine(philo, &next_death, &times_eaten))
-			break;
+			break ;
 		if (sleep_routine(philo, next_death))
-			break;
+			break ;
 		if (think_routine(philo, next_death))
-			break;
-	}
+			break ;
 	}
 	message_log(philo, DYING);
 }
